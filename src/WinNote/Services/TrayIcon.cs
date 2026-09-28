@@ -45,6 +45,19 @@ internal sealed unsafe class TrayIcon : IDisposable
         Shell_NotifyIcon(NIM_SETVERSION, &data);
     }
 
+    /// <summary>Swaps the icon image (e.g. when the taskbar switches between light and dark).</summary>
+    public void SetIcon(string iconPath)
+    {
+        nint newIcon = LoadImage(0, iconPath, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_LOADFROMFILE);
+        if (newIcon == 0) return;
+        var data = NewData();
+        data.uFlags = NIF_ICON;
+        data.hIcon = newIcon;
+        if (_added) Shell_NotifyIcon(NIM_MODIFY, &data);
+        if (_icon != 0) DestroyIcon(_icon);
+        _icon = newIcon;
+    }
+
     private NOTIFYICONDATAW NewData() => new()
     {
         cbSize = (uint)sizeof(NOTIFYICONDATAW),

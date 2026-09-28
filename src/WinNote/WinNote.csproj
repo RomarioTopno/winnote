@@ -58,6 +58,8 @@
 
   <ItemGroup>
     <Content Include="Assets\WinNote.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\TrayDark.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\TrayLight.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!--

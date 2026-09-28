@@ -13,6 +13,10 @@ internal static class AppPaths
     public static string NotesFile => Path.Combine(DataDir, "notes.json");
 
     public static string IconFile => Path.Combine(AppContext.BaseDirectory, "Assets", "WinNote.ico");
+
+    /// <summary>Single-colour tray icon: dark glyph for a light taskbar, white glyph for a dark one.</summary>
+    public static string TrayIconFile(bool lightTaskbar) =>
+        Path.Combine(AppContext.BaseDirectory, "Assets", lightTaskbar ? "TrayLight.ico" : "TrayDark.ico");
 }
 
 /// <summary>Loads/saves <see cref="AppSettings"/>; saves are debounced so window drags don't hammer the disk.</summary>

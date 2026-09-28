@@ -12,6 +12,7 @@ internal static unsafe partial class NativeMethods
     public const uint WM_NULL = 0x0000;
     public const uint WM_CLOSE = 0x0010;
     public const uint WM_ENDSESSION = 0x0016;
+    public const uint WM_SETTINGCHANGE = 0x001A;
     public const uint WM_CONTEXTMENU = 0x007B;
     public const uint WM_HOTKEY = 0x0312;
     public const uint WM_APP = 0x8000;

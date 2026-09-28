@@ -36,7 +36,8 @@ public partial class App : Application
         _window = new MainWindow(Settings, _hotkey);
         _hotkey.Pressed += () => _window.Toggle();
 
-        _tray = new TrayIcon(_host, AppPaths.IconFile, "WinNote");
+        _lightTaskbar = IsTaskbarLight();
+        _tray = new TrayIcon(_host, AppPaths.TrayIconFile(_lightTaskbar), "WinNote");
         _tray.Activated += () => _window.ToggleFromTray();
         _tray.ContextMenuRequested += ShowTrayMenu;
 
@@ -52,6 +53,7 @@ public partial class App : Application
 
     private bool OnHostMessage(uint msg, nint wParam, nint lParam)
     {
+        if (msg == WM_SETTINGCHANGE) UpdateTrayIconTheme(); // e.g. "ImmersiveColorSet" after a light/dark switch
         if (_hotkey!.HandleMessage(msg, wParam)) return true;
         if (_tray!.HandleMessage(msg, wParam, lParam)) return true;
         switch (msg)
@@ -68,6 +70,23 @@ public partial class App : Application
                 return true;
         }
         return false;
+    }
+
+    private bool _lightTaskbar;
+
+    /// <summary>The taskbar/tray follows Windows' "system" colour mode, not the app mode.</summary>
+    private static bool IsTaskbarLight()
+    {
+        using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+        return key?.GetValue("SystemUsesLightTheme") is int value && value != 0;
+    }
+
+    private void UpdateTrayIconTheme()
+    {
+        bool light = IsTaskbarLight();
+        if (light == _lightTaskbar) return;
+        _lightTaskbar = light;
+        _tray?.SetIcon(AppPaths.TrayIconFile(light));
     }
 
     private void ShowTrayMenu(int x, int y)
