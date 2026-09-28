@@ -19,6 +19,9 @@ instantly on a global hotkey, and hides again when you click away.
 | Previous / next note | **Ctrl+← / Ctrl+→**, Ctrl+PgUp / Ctrl+PgDn, or the arrows |
 | Delete note (undo from the toast for 5 s) | **Ctrl+W** or **Ctrl+Delete** |
 | Undo / redo (per note) | Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) |
+| Search all notes | **Ctrl+F** or 🔍; ↑/↓ and **Enter** open a result, Esc closes |
+| Next / previous match of the last search | **F3** / **Shift+F3** |
+| Indent (sub-todo) / outdent | **Tab** / **Shift+Tab** (Tab inserts a tab on plain text) |
 | Toggle todo, or turn a line into a todo | **Ctrl+Enter** (or click the `[ ]` marker) |
 | Continue a todo list / end it | Enter / Enter on an empty `[ ] ` |
 | Plain new line inside a list | Shift+Enter |
@@ -71,6 +74,15 @@ Visual Studio itself is optional: everything builds from the command line.
 ```powershell
 dotnet build src\WinNote\WinNote.csproj -c Debug -p:Platform=x64
 .\src\WinNote\bin\x64\Debug\net10.0-windows10.0.22621.0\win-x64\WinNote.exe
+```
+
+Debug builds run as a separate instance ("WinNote.Dev": own data in `%LOCALAPPDATA%\WinNote.Dev`,
+own single-instance lock and startup entry), so they never touch your real notes and can run
+next to the installed app. To do the same with any build, e.g. the published Release/AOT exe,
+set `WINNOTE_INSTANCE` first:
+
+```powershell
+$env:WINNOTE_INSTANCE = "WinNote.Test"; .\artifacts\app\win-x64\WinNote.exe
 ```
 
 ## Tests
