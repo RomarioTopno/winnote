@@ -19,6 +19,9 @@ public sealed class AppSettings
     public string FontFamily { get; set; } = "Segoe UI Variable Text";
     public double FontSize { get; set; } = 15;
 
+    /// <summary>Live Markdown formatting in the editor.</summary>
+    public bool MarkdownFormatting { get; set; } = true;
+
     /// <summary>Hand unused RAM back to Windows a few seconds after the window hides (no UI; settings.json only).</summary>
     public bool TrimMemoryWhenHidden { get; set; } = true;
 }

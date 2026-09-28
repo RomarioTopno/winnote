@@ -51,6 +51,9 @@
                               SelectionChanged="SizeCombo_SelectionChanged" />
                 </Grid>
 
+                <ToggleSwitch x:Name="MarkdownToggle" Header="Markdown formatting (headings, **bold**, links, …)"
+                              Toggled="MarkdownToggle_Toggled" />
+
                 <StackPanel Spacing="4">
                     <ComboBox x:Name="AutoDeleteCombo" HorizontalAlignment="Stretch"
                               Header="Delete notes not edited for" SelectionChanged="AutoDeleteCombo_SelectionChanged" />

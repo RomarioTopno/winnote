@@ -29,6 +29,7 @@ public sealed partial class MainWindow
         if (Editor.FontFamily.Source != family) Editor.FontFamily = new FontFamily(family);
         double size = Math.Clamp(s.FontSize, 8, 48);
         if (Editor.FontSize != size) Editor.FontSize = size;
+        Editor.MarkdownEnabled = s.MarkdownFormatting;
     }
 
     public void OpenSettings()

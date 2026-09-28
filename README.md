@@ -21,6 +21,7 @@ instantly on a global hotkey, and hides again when you click away.
 | Undo / redo (per note) | Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) |
 | Search all notes | **Ctrl+F** or 🔍; ↑/↓ and **Enter** open a result, Esc closes |
 | Next / previous match of the last search | **F3** / **Shift+F3** |
+| Open a link | **Ctrl+Click** (Markdown `[text](url)` or a bare `https://` URL) |
 | Indent (sub-todo) / outdent | **Tab** / **Shift+Tab** (Tab inserts a tab on plain text) |
 | Toggle todo, or turn a line into a todo | **Ctrl+Enter** (or click the `[ ]` marker) |
 | Continue a todo list / end it | Enter / Enter on an empty `[ ] ` |
@@ -28,7 +29,8 @@ instantly on a global hotkey, and hides again when you click away.
 | Remove a todo marker | Backspace right after `[ ] ` |
 
 - Typing `[] `, `- [ ] ` or `* [ ] ` at the start of a line converts it to `[ ] ` (Ctrl+Z reverts).
-- The ⋯ menu has **Clear completed**, **Export as .txt…** and **Delete note**; the copy button copies
+- Markdown is formatted as you type (headings, **bold**, *italic*, ~~strike~~, `code`, quotes, lists, links); the symbols stay visible, dimmed. Turn it off in Settings.
+- The ⋯ menu has **Clear completed**, **Export as .txt…**, **Export as Markdown (.md)…** (todos become `- [ ]` task lists) and **Delete note**; the copy button copies
   the whole note.
 - Pin (📌) keeps the window on top and visible when it loses focus.
 - Tray icon: left-click toggles; right-click for Show, Pin, Settings, Start with Windows, Exit.

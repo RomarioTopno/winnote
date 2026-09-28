@@ -71,6 +71,7 @@ public sealed partial class SettingsView : UserControl
             SizeCombo.SelectedIndex = IndexOfNearest(s_fontSizes, (int)Math.Round(s.FontSize));
             AutoDeleteCombo.SelectedIndex = IndexOfNearest(s_autoDeleteDays, s.AutoDeleteDays);
             StartupToggle.IsOn = StartupService.IsEnabled;
+            MarkdownToggle.IsOn = s.MarkdownFormatting;
         }
         finally
         {
@@ -133,6 +134,14 @@ public sealed partial class SettingsView : UserControl
         if (_populating || AutoDeleteCombo.SelectedItem is not ComboBoxItem { Tag: int days }) return;
         _settings.Settings.AutoDeleteDays = days;
         _settings.Save();
+    }
+
+    private void MarkdownToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_populating) return;
+        _settings.Settings.MarkdownFormatting = MarkdownToggle.IsOn;
+        _settings.Save();
+        _appearanceChanged();
     }
 
     private void StartupToggle_Toggled(object sender, RoutedEventArgs e)

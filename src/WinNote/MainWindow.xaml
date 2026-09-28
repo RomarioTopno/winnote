@@ -153,6 +153,9 @@
                             <MenuFlyoutItem Click="ExportMenuItem_Click" Text="Export as .txt…">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74E;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
+                            <MenuFlyoutItem Click="ExportMarkdownMenuItem_Click" Text="Export as Markdown (.md)…">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8A5;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
                             <MenuFlyoutItem Click="DeleteMenuItem_Click" KeyboardAcceleratorTextOverride="Ctrl+W" Text="Delete note">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>

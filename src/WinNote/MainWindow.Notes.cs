@@ -183,23 +183,30 @@ public sealed partial class MainWindow
         if (ClipboardHelper.SetText(CurrentNote.Text)) ShowToast("Copied to clipboard", milliseconds: 1500);
     }
 
-    private async void ExportMenuItem_Click(object sender, RoutedEventArgs e)
+    private void ExportMenuItem_Click(object sender, RoutedEventArgs e) => ExportCurrentNote(markdown: false);
+
+    private void ExportMarkdownMenuItem_Click(object sender, RoutedEventArgs e) => ExportCurrentNote(markdown: true);
+
+    /// <summary>Saves the current note as .txt (as is, CRLF) or .md (converted, see <see cref="MarkdownExport"/>).</summary>
+    private async void ExportCurrentNote(bool markdown)
     {
         var note = CurrentNote;
         try
         {
+            string extension = markdown ? ".md" : ".txt";
             var picker = new Microsoft.Windows.Storage.Pickers.FileSavePicker(AppWindow.Id)
             {
                 SuggestedFileName = SuggestFileName(note.Text),
-                DefaultFileExtension = ".txt",
+                DefaultFileExtension = extension,
             };
             // Explicit List<string> (not a collection expression): CsWinRT's AOT generator needs to
             // see the concrete type to emit the COM wrapper that passes it to WinRT.
-            picker.FileTypeChoices.Add("Text file", new List<string> { ".txt" });
+            picker.FileTypeChoices.Add(markdown ? "Markdown" : "Text file", new List<string> { extension });
             var result = await picker.PickSaveFileAsync();
             if (result is null) return;
 
-            await File.WriteAllTextAsync(result.Path, note.Text.Replace("\n", "\r\n"), new UTF8Encoding(false));
+            string content = markdown ? MarkdownExport.FromNote(note.Text) : note.Text;
+            await File.WriteAllTextAsync(result.Path, content.Replace("\n", "\r\n"), new UTF8Encoding(false));
             ShowToast($"Saved {Path.GetFileName(result.Path)}", milliseconds: 2500);
         }
         catch (Exception ex)

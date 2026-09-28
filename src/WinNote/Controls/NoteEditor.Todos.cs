@@ -15,6 +15,7 @@ public sealed partial class NoteEditor
     private (Color Text, Color Dim, Color Accent) _palette;
     private bool _composing;      // IME composition in progress: don't touch formatting
     private bool _pointerDownOnText;
+    private bool _pointerCtrl;
     private Windows.Foundation.Point _pointerDownAt;
     private float? _uncheckedPad; // extra spacing (pt) so "[ ]" is as wide as "[x]"
     private float _tabStop;       // pt: width of "[x] ", so a sub-todo's marker sits under its parent's text
@@ -94,6 +95,8 @@ public sealed partial class NoteEditor
             // RichEdit keeps an explicit 0.5" tab stop; clear it so every indent level uses
             // DefaultTabStop (the width of "[x] ").
             doc.GetRange(0, text.Length + 1).ParagraphFormat.ClearAllTabs();
+
+            ApplyMarkdown(doc, text); // todo styling below takes precedence on todo lines
 
             foreach (var line in TodoText.Lines(text))
             {
@@ -245,7 +248,8 @@ public sealed partial class NoteEditor
     private void OnPointerPressedAny(object sender, PointerRoutedEventArgs e)
     {
         var point = e.GetCurrentPoint(this);
-        _pointerDownOnText = point.Properties.IsLeftButtonPressed && e.KeyModifiers == VirtualKeyModifiers.None;
+        _pointerCtrl = e.KeyModifiers == VirtualKeyModifiers.Control;
+        _pointerDownOnText = point.Properties.IsLeftButtonPressed && (e.KeyModifiers == VirtualKeyModifiers.None || _pointerCtrl);
         _pointerDownAt = point.Position;
     }
 
@@ -259,6 +263,12 @@ public sealed partial class NoteEditor
 
         // RichEditBox has already moved the caret to the click position.
         var sel = Document.Selection;
+        if (_pointerCtrl)
+        {
+            // Ctrl+Click opens a link (RichEdit may have selected a word; the start is the click spot).
+            if (TryOpenLinkAtCaret()) sel.Collapse(true);
+            return;
+        }
         if (sel.Length != 0) return;
         int caret = sel.StartPosition;
         string text = EditorText;
