@@ -46,6 +46,28 @@ public sealed partial class MainWindow
         _rootVisual.StartAnimation("Translation", _slideIn);
     }
 
+    private bool _accentWatch;
+
+    /// <summary>
+    /// While pinned, the window gets a 1 px border in the system accent colour (Windows 11 DWM
+    /// border colour), so a pinned note is recognisable even when its title bar is covered.
+    /// </summary>
+    private void UpdatePinnedBorder()
+    {
+        if (!_accentWatch)
+        {
+            _accentWatch = true;
+            s_uiSettings.ColorValuesChanged += (_, _) => DispatcherQueue.TryEnqueue(UpdatePinnedBorder);
+        }
+        int colorRef = unchecked((int)Interop.NativeMethods.DWMWA_COLOR_DEFAULT);
+        if (IsPinned)
+        {
+            var accent = s_uiSettings.GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
+            colorRef = accent.R | (accent.G << 8) | (accent.B << 16); // COLORREF is 0x00BBGGRR
+        }
+        Interop.NativeMethods.SetDwmInt(_hwnd, Interop.NativeMethods.DWMWA_BORDER_COLOR, colorRef);
+    }
+
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _trimTimer;
 
     /// <summary>

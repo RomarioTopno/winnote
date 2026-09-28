@@ -68,7 +68,9 @@ public sealed partial class MainWindow : Window
         set
         {
             _presenter.IsAlwaysOnTop = value;
-            PinIcon.Glyph = value ? "" : ""; // Pinned (filled) / Pin
+            PinIconOff.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
+            PinIconOn.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+            UpdatePinnedBorder();
             string label = value ? "Unpin" : "Pin on top";
             ToolTipService.SetToolTip(PinButton, label);
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PinButton, label);

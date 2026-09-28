@@ -31,7 +31,16 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
                 <Button x:Name="PinButton" AutomationProperties.Name="Pin on top" Click="PinButton_Click" Style="{StaticResource IconButtonStyle}"
                         ToolTipService.ToolTip="Pin on top">
-                    <FontIcon x:Name="PinIcon" FontSize="14" Glyph="&#xE718;" />
+                    <Grid>
+                        <!-- Unpinned: outline pin. -->
+                        <FontIcon x:Name="PinIconOff" FontSize="14" Glyph="&#xE718;" />
+                        <!-- Pinned: solid head (E842) under the outline (E718), both in the accent colour.
+                             (The font's "Pinned" glyph E840 looks identical to E718.) -->
+                        <Grid x:Name="PinIconOn" Visibility="Collapsed">
+                            <FontIcon FontSize="14" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Glyph="&#xE842;" />
+                            <FontIcon FontSize="14" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Glyph="&#xE718;" />
+                        </Grid>
+                    </Grid>
                 </Button>
                 <Button x:Name="NewNoteButton" AutomationProperties.Name="New note" Click="NewNoteButton_Click" Style="{StaticResource IconButtonStyle}"
                         ToolTipService.ToolTip="New note (Ctrl+N)">

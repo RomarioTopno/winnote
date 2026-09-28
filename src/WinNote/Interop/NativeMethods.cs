@@ -50,6 +50,8 @@ internal static unsafe partial class NativeMethods
     public const uint DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     public const uint DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     public const int DWMWCP_ROUND = 2;
+    public const uint DWMWA_BORDER_COLOR = 34;       // Windows 11
+    public const uint DWMWA_COLOR_DEFAULT = 0xFFFFFFFF;
 
     [LibraryImport("user32.dll", EntryPoint = "RegisterClassExW", SetLastError = true)]
     public static partial ushort RegisterClassEx(WNDCLASSEXW* wc);
