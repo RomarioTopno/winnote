@@ -1,0 +1,24 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <!--
+    Builds WinNote-<version>-x64.msi from the published app folder.
+    Easiest: run build-installer.ps1 at the repo root (publishes, then builds this project).
+  -->
+  <PropertyGroup>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <OutputName>WinNote-$(WinNoteVersion)-x64</OutputName>
+    <AppDir Condition="'$(AppDir)' == ''">$(MSBuildThisFileDirectory)..\artifacts\app\win-x64\</AppDir>
+    <!-- AppDir may come from the command line (global property), so normalise into a new one. -->
+    <AppSourceDir>$([MSBuild]::EnsureTrailingSlash('$(AppDir)'))</AppSourceDir>
+    <DefineConstants>ProductVersion=$(WinNoteVersion);AppDir=$(AppSourceDir);RepoRoot=$(MSBuildThisFileDirectory)..\</DefineConstants>
+    <!--
+      ICE03: several Windows App SDK DLLs list more languages in their version resource than the
+      MSI File.Language column allows. It only affects file-version comparisons, not installing.
+    -->
+    <SuppressIces>ICE03</SuppressIces>
+  </PropertyGroup>
+
+  <Target Name="CheckAppFolder" BeforeTargets="Build">
+    <Error Condition="!Exists('$(AppSourceDir)WinNote.exe')"
+           Text="$(AppSourceDir)WinNote.exe not found. Run build-installer.ps1, or publish the app to that folder first." />
+  </Target>
+</Project>

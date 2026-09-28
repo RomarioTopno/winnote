@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WinNote/WinNote.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WinNote.Tests/WinNote.Tests.csproj" />
+  </Folder>
+</Solution>

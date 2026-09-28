@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="WinNote.Views.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="6,0,6,4" Orientation="Horizontal" Spacing="6">
+            <Button AutomationProperties.Name="Back to note" Click="Back_Click"
+                    Style="{StaticResource IconButtonStyle}" ToolTipService.ToolTip="Back (Esc)">
+                <FontIcon FontSize="12" Glyph="&#xE72B;" />
+            </Button>
+            <TextBlock VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Settings" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" Padding="16,4,16,16">
+            <StackPanel Spacing="18">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Show / hide shortcut" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="HotkeyButton" MinWidth="150" HorizontalContentAlignment="Left"
+                                AutomationProperties.Name="Change shortcut"
+                                Click="HotkeyButton_Click" LostFocus="HotkeyButton_LostFocus"
+                                PreviewKeyDown="HotkeyButton_PreviewKeyDown" />
+                        <HyperlinkButton Click="ResetHotkey_Click" Content="Reset" />
+                    </StackPanel>
+                    <TextBlock x:Name="HotkeyStatus" Style="{StaticResource CaptionTextBlockStyle}"
+                               TextWrapping="Wrap" Visibility="Collapsed" />
+                </StackPanel>
+
+                <ComboBox x:Name="ThemeCombo" HorizontalAlignment="Stretch" Header="Theme"
+                          SelectionChanged="ThemeCombo_SelectionChanged">
+                    <ComboBoxItem Content="Use system setting" Tag="System" />
+                    <ComboBoxItem Content="Light" Tag="Light" />
+                    <ComboBoxItem Content="Dark" Tag="Dark" />
+                </ComboBox>
+
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="FontCombo" HorizontalAlignment="Stretch" Header="Font"
+                              SelectionChanged="FontCombo_SelectionChanged" />
+                    <ComboBox x:Name="SizeCombo" Grid.Column="1" MinWidth="80" Header="Size"
+                              SelectionChanged="SizeCombo_SelectionChanged" />
+                </Grid>
+
+                <StackPanel Spacing="4">
+                    <ComboBox x:Name="AutoDeleteCombo" HorizontalAlignment="Stretch"
+                              Header="Delete notes not edited for" SelectionChanged="AutoDeleteCombo_SelectionChanged" />
+                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                               Text="Checked each time the window opens." />
+                </StackPanel>
+
+                <ToggleSwitch x:Name="StartupToggle" Header="Start with Windows (hidden in the tray)"
+                              Toggled="StartupToggle_Toggled" />
+
+                <StackPanel Spacing="2">
+                    <HyperlinkButton Margin="-12,0,0,0" Click="OpenDataFolder_Click" Content="Open data folder" />
+                    <TextBlock x:Name="VersionText" Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                               Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
