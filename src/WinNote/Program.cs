@@ -7,7 +7,7 @@ namespace WinNote;
 
 public static class Program
 {
-    private const string MutexName = @"Local\WinNote.SingleInstance.3F2B6C1E";
+    private const string MutexName = @"Local\" + AppPaths.InstanceName + ".SingleInstance.3F2B6C1E";
     private static Mutex? s_mutex;
 
     [STAThread]

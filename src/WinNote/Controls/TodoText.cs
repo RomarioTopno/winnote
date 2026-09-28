@@ -114,13 +114,149 @@ internal static class TodoText
         return false;
     }
 
-    /// <summary>Deletes every checked todo line.</summary>
+    /// <summary>Deletes every checked todo line together with its sub-items (the deeper-indented lines below it).</summary>
     public static string RemoveCompleted(string text)
     {
         var kept = new List<string>();
+        int skipDeeperThan = -1; // inside a removed item's subtree: skip lines indented deeper than this
         foreach (var line in Lines(text))
-            if (!(TryParse(text, line, out var todo) && todo.IsChecked))
-                kept.Add(text[line.Start..line.End]);
+        {
+            int indent = IndentWidth(text, line);
+            if (skipDeeperThan >= 0)
+            {
+                if (!IsBlank(text, line) && indent > skipDeeperThan) continue;
+                skipDeeperThan = -1;
+            }
+            if (TryParse(text, line, out var todo) && todo.IsChecked)
+            {
+                skipDeeperThan = indent;
+                continue;
+            }
+            kept.Add(text[line.Start..line.End]);
+        }
         return string.Join(Sep, kept);
+    }
+
+    // ---- Indentation / sub-todos ----
+
+    public const int TabWidth = 4; // columns, for comparing tab and space indents
+
+    /// <summary>Indent of a line in columns (a tab advances to the next multiple of <see cref="TabWidth"/>).</summary>
+    public static int IndentWidth(string text, Line line)
+    {
+        int width = 0;
+        for (int i = line.Start; i < line.End; i++)
+        {
+            if (text[i] == ' ') width++;
+            else if (text[i] == '\t') width = (width / TabWidth + 1) * TabWidth;
+            else break;
+        }
+        return width;
+    }
+
+    public static bool IsBlank(string text, Line line)
+    {
+        for (int i = line.Start; i < line.End; i++)
+            if (!char.IsWhiteSpace(text[i])) return false;
+        return true;
+    }
+
+    /// <summary>The leading whitespace of a line (to repeat it on the next line).</summary>
+    public static string LeadingWhitespace(string text, Line line)
+    {
+        int i = line.Start;
+        while (i < line.End && (text[i] == ' ' || text[i] == '\t')) i++;
+        return text[line.Start..i];
+    }
+
+    /// <summary>Lines touched by a selection. A selection ending exactly at a line start doesn't include that line.</summary>
+    public static List<Line> LinesInSelection(string text, int start, int end)
+    {
+        var result = new List<Line>();
+        var line = LineAt(text, start);
+        while (true)
+        {
+            result.Add(line);
+            if (line.End >= end || line.End >= text.Length) break;
+            var next = LineAt(text, line.End + 1);
+            if (next.Start >= end && end > start) break;
+            line = next;
+        }
+        return result;
+    }
+
+    /// <summary>Adds one tab at the start of every selected line (makes todos into sub-todos).</summary>
+    public static string IndentLines(string text, ref int selStart, ref int selEnd)
+    {
+        var edits = LinesInSelection(text, selStart, selEnd).Select(l => (Pos: l.Start, Remove: 0, Insert: "\t")).ToList();
+        return ApplyEdits(text, edits, ref selStart, ref selEnd);
+    }
+
+    /// <summary>Removes one indent level (a tab, or up to <see cref="TabWidth"/> spaces) from every selected line.</summary>
+    public static string OutdentLines(string text, ref int selStart, ref int selEnd)
+    {
+        var edits = new List<(int Pos, int Remove, string Insert)>();
+        foreach (var line in LinesInSelection(text, selStart, selEnd))
+        {
+            int remove = 0;
+            if (line.Start < line.End && text[line.Start] == '\t') remove = 1;
+            else while (remove < TabWidth && line.Start + remove < line.End && text[line.Start + remove] == ' ') remove++;
+            if (remove > 0) edits.Add((line.Start, remove, ""));
+        }
+        return ApplyEdits(text, edits, ref selStart, ref selEnd);
+    }
+
+    /// <summary>
+    /// Toggles a todo and gives its sub-todos (following lines indented deeper, up to the first blank
+    /// line or a line at the same or a shallower level) the same state.
+    /// </summary>
+    public static string ToggleWithChildren(string text, Line line, Todo todo)
+    {
+        bool check = !todo.IsChecked;
+        var chars = text.ToCharArray();
+        chars[todo.MarkerStart + 1] = check ? 'x' : ' ';
+
+        int parentIndent = IndentWidth(text, line);
+        int pos = line.End + 1;
+        while (pos <= text.Length)
+        {
+            var child = LineAt(text, pos);
+            if (IsBlank(text, child) || IndentWidth(text, child) <= parentIndent) break;
+            if (TryParse(text, child, out var childTodo)) chars[childTodo.MarkerStart + 1] = check ? 'x' : ' ';
+            if (child.End >= text.Length) break;
+            pos = child.End + 1;
+        }
+        return new string(chars);
+    }
+
+    /// <summary>Applies non-overlapping edits and maps a selection through them.</summary>
+    private static string ApplyEdits(string text, List<(int Pos, int Remove, string Insert)> edits, ref int selStart, ref int selEnd)
+    {
+        if (edits.Count == 0) return text;
+        int Map(int p)
+        {
+            int delta = 0;
+            foreach (var e in edits)
+            {
+                if (e.Pos > p) break;
+                if (e.Remove == 0) { delta += e.Insert.Length; continue; }          // insert at/before p: shift
+                if (p < e.Pos + e.Remove) return e.Pos + delta;                    // inside a removed span
+                delta += e.Insert.Length - e.Remove;
+            }
+            return p + delta;
+        }
+        int newStart = Map(selStart), newEnd = Map(selEnd);
+
+        var sb = new System.Text.StringBuilder(text.Length + edits.Count);
+        int last = 0;
+        foreach (var e in edits)
+        {
+            sb.Append(text, last, e.Pos - last).Append(e.Insert);
+            last = e.Pos + e.Remove;
+        }
+        sb.Append(text, last, text.Length - last);
+
+        (selStart, selEnd) = (newStart, newEnd);
+        return sb.ToString();
     }
 }

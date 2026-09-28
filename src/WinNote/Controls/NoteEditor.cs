@@ -180,7 +180,7 @@ public sealed partial class NoteEditor : RichEditBox
         bool shift = IsKeyDown(VirtualKey.Shift);
         bool alt = IsKeyDown(VirtualKey.Menu); // Ctrl+Alt is AltGr on many layouts: leave it alone
 
-        if (!alt && e.Key is VirtualKey.Enter or VirtualKey.Back && HandleTodoKey(e.Key, ctrl, shift))
+        if (!alt && e.Key is VirtualKey.Enter or VirtualKey.Back or VirtualKey.Tab && HandleTodoKey(e.Key, ctrl, shift))
         {
             e.Handled = true;
             return;

@@ -17,6 +17,7 @@ public sealed partial class NoteEditor
     private bool _pointerDownOnText;
     private Windows.Foundation.Point _pointerDownAt;
     private float? _uncheckedPad; // extra spacing (pt) so "[ ]" is as wide as "[x]"
+    private float _tabStop;       // pt: width of "[x] ", so a sub-todo's marker sits under its parent's text
 
     private void InitializeTodos()
     {
@@ -52,8 +53,12 @@ public sealed partial class NoteEditor
             probe.Measure(new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
             return probe.DesiredSize.Width;
         }
-        double diffDip = Width("[x]") - Width("[ ]");
+        double markerDip = Width("[x]");
+        double diffDip = markerDip - Width("[ ]");
+        probe.FontWeight = FontWeights.Normal;
+        double spaceDip = Width("a a") - Width("aa");
         _uncheckedPad = pad = (float)Math.Max(0, diffDip * 72.0 / 96.0); // DIPs → points
+        _tabStop = (float)((markerDip + spaceDip) * 72.0 / 96.0);
         return pad;
     }
 
@@ -73,6 +78,8 @@ public sealed partial class NoteEditor
         if (_composing) return;
         string text = EditorText;
         var doc = Document;
+        UncheckedPad(); // (re)measures marker metrics after a font change
+        if (_tabStop > 0 && Math.Abs(doc.DefaultTabStop - _tabStop) > 0.01f) doc.DefaultTabStop = _tabStop;
         doc.BatchDisplayUpdates();
         try
         {
@@ -84,6 +91,9 @@ public sealed partial class NoteEditor
             all.Italic = FormatEffect.Off;
             all.Underline = UnderlineType.None;
             all.Spacing = 0;
+            // RichEdit keeps an explicit 0.5" tab stop; clear it so every indent level uses
+            // DefaultTabStop (the width of "[x] ").
+            doc.GetRange(0, text.Length + 1).ParagraphFormat.ClearAllTabs();
 
             foreach (var line in TodoText.Lines(text))
             {
@@ -127,7 +137,7 @@ public sealed partial class NoteEditor
 
     // ---- Keyboard ----
 
-    /// <summary>Handles Enter / Backspace / Ctrl+Enter on todo lines. Returns true if handled.</summary>
+    /// <summary>Handles Tab / Enter / Backspace / Ctrl+Enter for lists and indentation. Returns true if handled.</summary>
     private bool HandleTodoKey(VirtualKey key, bool ctrl, bool shift)
     {
         var sel = Document.Selection;
@@ -140,19 +150,47 @@ public sealed partial class NoteEditor
             return true;
         }
 
-        if (!TodoText.TryParseAt(text, start, out var line, out var todo)) return false;
+        if (key == VirtualKey.Tab && !ctrl)
+        {
+            HandleTab(text, start, end, shift);
+            return true;
+        }
+
+        if (!TodoText.TryParseAt(text, start, out var line, out var todo))
+        {
+            // Plain line: Enter keeps the line's indentation.
+            if (key == VirtualKey.Enter && !ctrl && !shift)
+            {
+                string indent = TodoText.LeadingWhitespace(text, line);
+                if (indent.Length > 0 && start >= line.Start + indent.Length)
+                {
+                    InsertAtSelection("\r" + indent);
+                    return true;
+                }
+            }
+            return false;
+        }
         bool caretInContent = start >= todo.ContentStart && end <= line.End;
 
         if (key == VirtualKey.Enter && !ctrl && !shift && caretInContent)
         {
             if (start == end && string.IsNullOrWhiteSpace(text[todo.ContentStart..line.End]))
             {
-                // Enter on an empty todo ends the list: the line becomes empty.
-                ApplyCommand(text.Remove(line.Start, line.Length), line.Start, line.Start);
+                if (TodoText.IndentWidth(text, line) > 0)
+                {
+                    // Empty sub-todo: move it up one level instead of ending the list.
+                    int a = start, b = end;
+                    ApplyCommand(TodoText.OutdentLines(text, ref a, ref b), a, b);
+                }
+                else
+                {
+                    // Empty top-level todo ends the list: the line becomes empty.
+                    ApplyCommand(text.Remove(line.Start, line.Length), line.Start, line.Start);
+                }
             }
             else
             {
-                // Continue the list with the same indent.
+                // Continue the list at the same level.
                 InsertAtSelection("\r" + text[line.Start..todo.MarkerStart] + "[ ] ");
             }
             return true;
@@ -167,12 +205,32 @@ public sealed partial class NoteEditor
         return false;
     }
 
-    /// <summary>Ctrl+Enter: toggles todo lines in the selection; turns a plain line into a todo.</summary>
+    /// <summary>
+    /// Tab indents (Shift+Tab outdents). On a todo line, or with several lines selected, the whole
+    /// line(s) move, making sub-todos; elsewhere Tab inserts a tab character at the caret.
+    /// </summary>
+    private void HandleTab(string text, int start, int end, bool outdent)
+    {
+        bool multiLine = TodoText.LinesInSelection(text, start, end).Count > 1;
+        bool onTodo = TodoText.TryParseAt(text, start, out _, out _);
+        if (outdent || multiLine || onTodo)
+        {
+            int a = start, b = end;
+            string updated = outdent ? TodoText.OutdentLines(text, ref a, ref b) : TodoText.IndentLines(text, ref a, ref b);
+            ApplyCommand(updated, a, b);
+        }
+        else
+        {
+            InsertAtSelection("\t");
+        }
+    }
+
+    /// <summary>Ctrl+Enter: toggles the todo (and its sub-todos); turns a plain line into a todo.</summary>
     private void ToggleOrMakeTodo(string text, int start, int end)
     {
         if (TodoText.TryParseAt(text, start, out var line, out var todo))
         {
-            ApplyCommand(TodoText.Toggle(text, todo), start, end);
+            ApplyCommand(TodoText.ToggleWithChildren(text, line, todo), start, end);
         }
         else
         {
@@ -204,8 +262,8 @@ public sealed partial class NoteEditor
         if (sel.Length != 0) return;
         int caret = sel.StartPosition;
         string text = EditorText;
-        if (TodoText.TryParseAt(text, caret, out _, out var todo) && caret >= todo.MarkerStart && caret <= todo.MarkerEnd)
-            ApplyCommand(TodoText.Toggle(text, todo), caret, caret);
+        if (TodoText.TryParseAt(text, caret, out var line, out var todo) && caret >= todo.MarkerStart && caret <= todo.MarkerEnd)
+            ApplyCommand(TodoText.ToggleWithChildren(text, line, todo), caret, caret);
     }
 
     // ---- Commands for the window ----

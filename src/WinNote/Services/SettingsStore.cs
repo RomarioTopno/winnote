@@ -6,8 +6,16 @@ namespace WinNote.Services;
 
 internal static class AppPaths
 {
+    /// <summary>"WinNote" (Debug builds: "WinNote.Dev", so a dev build never touches real notes).</summary>
+    public const string InstanceName =
+#if DEBUG
+        "WinNote.Dev";
+#else
+        "WinNote";
+#endif
+
     public static string DataDir { get; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinNote");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), InstanceName);
 
     public static string SettingsFile => Path.Combine(DataDir, "settings.json");
     public static string NotesFile => Path.Combine(DataDir, "notes.json");

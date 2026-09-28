@@ -12,7 +12,7 @@ namespace WinNote.Services;
 /// </summary>
 internal sealed unsafe class HostWindow : IDisposable
 {
-    public const string ClassName = "WinNote.Host";
+    public const string ClassName = AppPaths.InstanceName + ".Host"; // Debug builds can run next to the installed app
     public const uint WM_APP_SHOW = WM_APP + 2; // posted by a second instance
 
     public static readonly uint WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
