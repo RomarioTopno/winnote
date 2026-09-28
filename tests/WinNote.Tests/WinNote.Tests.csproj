@@ -15,6 +15,7 @@
     <Compile Include="..\..\src\WinNote\Controls\TodoText.cs" Link="Linked\TodoText.cs" />
     <Compile Include="..\..\src\WinNote\Controls\EditHistory.cs" Link="Linked\EditHistory.cs" />
     <Compile Include="..\..\src\WinNote\Services\AtomicFile.cs" Link="Linked\AtomicFile.cs" />
+    <Compile Include="..\..\src\WinNote\Services\NoteSearch.cs" Link="Linked\NoteSearch.cs" />
   </ItemGroup>
 
   <ItemGroup>

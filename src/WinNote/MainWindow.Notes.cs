@@ -232,6 +232,7 @@ public sealed partial class MainWindow
     private void NewNoteButton_Click(object sender, RoutedEventArgs e)
     {
         CloseSettings();
+        CloseSearch();
         NewNote();
     }
 

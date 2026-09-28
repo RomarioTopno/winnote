@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="WinNote.Views.SearchView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Padding="12,0,12,8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBox x:Name="QueryBox"
+                 AutomationProperties.Name="Search all notes"
+                 PlaceholderText="Search all notes"
+                 PreviewKeyDown="QueryBox_PreviewKeyDown"
+                 TextChanged="QueryBox_TextChanged" />
+
+        <TextBlock x:Name="Summary" Grid.Row="1" Margin="4,8,4,4"
+                   Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                   Style="{StaticResource CaptionTextBlockStyle}" />
+
+        <ListView x:Name="Results" Grid.Row="2" Margin="-8,0,-8,0"
+                  AutomationProperties.Name="Search results"
+                  IsItemClickEnabled="True" SelectionMode="Single"
+                  ItemClick="Results_ItemClick" />
+    </Grid>
+</UserControl>

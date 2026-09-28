@@ -34,6 +34,7 @@ public sealed partial class MainWindow
     public void OpenSettings()
     {
         if (_settingsOpen) return;
+        CloseSearch();
         if (_settingsView is null)
         {
             _settingsView = new SettingsView(_settings, _hotkey, ApplyAppearance, CloseSettings);

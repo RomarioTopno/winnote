@@ -235,11 +235,25 @@ public sealed partial class MainWindow : Window
 
         if (e.Key == VirtualKey.Escape && !ctrl && !alt)
         {
-            if (_settingsOpen) CloseSettings(); else HideWindow();
+            if (_searchOpen) CloseSearch();
+            else if (_settingsOpen) CloseSettings();
+            else HideWindow();
             e.Handled = true;
             return;
         }
-        if (!ctrl || alt || _settingsOpen) return;
+        if (e.Key == VirtualKey.F && ctrl && !alt && !shift)
+        {
+            if (_searchOpen) CloseSearch(); else OpenSearch();
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == VirtualKey.F3 && !ctrl && !alt && !_searchOpen && !_settingsOpen)
+        {
+            StepSearchHit(shift ? -1 : +1);
+            e.Handled = true;
+            return;
+        }
+        if (!ctrl || alt || _settingsOpen || _searchOpen) return;
 
         switch (e.Key)
         {

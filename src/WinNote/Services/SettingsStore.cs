@@ -6,8 +6,13 @@ namespace WinNote.Services;
 
 internal static class AppPaths
 {
-    /// <summary>"WinNote" (Debug builds: "WinNote.Dev", so a dev build never touches real notes).</summary>
-    public const string InstanceName =
+    /// <summary>
+    /// Names the data folder, single-instance lock, host window and startup entry. "WinNote" for
+    /// the real app; "WinNote.Dev" for Debug builds; the WINNOTE_INSTANCE environment variable
+    /// overrides both, so any build can run as a separate test instance next to the installed one.
+    /// </summary>
+    public static readonly string InstanceName =
+        Environment.GetEnvironmentVariable("WINNOTE_INSTANCE") is { Length: > 0 } custom ? custom :
 #if DEBUG
         "WinNote.Dev";
 #else

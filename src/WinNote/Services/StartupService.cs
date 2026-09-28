@@ -8,7 +8,7 @@ internal static class StartupService
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
     // Where Task Manager's Startup tab records "Disabled" (first byte 0x03) for Run entries.
     private const string ApprovedKey = @"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
-    private const string ValueName = AppPaths.InstanceName;
+    private static readonly string ValueName = AppPaths.InstanceName;
 
     private static string Command => $"\"{Environment.ProcessPath}\" --hidden";
 

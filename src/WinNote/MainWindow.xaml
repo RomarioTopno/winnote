@@ -29,6 +29,10 @@
             </Grid>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                <Button x:Name="SearchButton" AutomationProperties.Name="Search all notes" Click="SearchButton_Click"
+                        Style="{StaticResource IconButtonStyle}" ToolTipService.ToolTip="Search all notes (Ctrl+F)">
+                    <FontIcon FontSize="14" Glyph="&#xE721;" />
+                </Button>
                 <Button x:Name="PinButton" AutomationProperties.Name="Pin on top" Click="PinButton_Click" Style="{StaticResource IconButtonStyle}"
                         ToolTipService.ToolTip="Pin on top">
                     <Grid>
@@ -160,5 +164,7 @@
         </Grid>
         <!-- Settings view is created in code on first open (see MainWindow.Settings.cs). -->
         <Border x:Name="SettingsHost" Grid.Row="1" Grid.RowSpan="2" Visibility="Collapsed" />
+        <!-- Search panel, also created on first use (see MainWindow.Search.cs). -->
+        <Border x:Name="SearchHost" Grid.Row="1" Grid.RowSpan="2" Visibility="Collapsed" />
     </Grid>
 </Window>
