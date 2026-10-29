@@ -73,6 +73,10 @@ powershell -ExecutionPolicy Bypass -File build-installer.ps1
 
 Built with WinUI 3 (Windows App SDK), .NET 10 and Native AOT. The installer uses WiX Toolset 5.
 
+## License
+
+[MIT](LICENSE): free to use, change and share.
+
 ## About the name
 
 WinNote is an independent project. It is not affiliated with or endorsed by Antinote or its
