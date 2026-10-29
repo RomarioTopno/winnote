@@ -97,6 +97,9 @@
             </controls:NoteEditor.Resources>
         </controls:NoteEditor>
 
+        <!-- The editor's own caret is hidden; NoteEditor draws a thicker accent-coloured one here. -->
+        <Canvas x:Name="CaretLayer" Grid.Row="1" IsHitTestVisible="False" />
+
         <!-- Transient message with an optional action ("Note deleted · Undo"). -->
         <Border
             x:Name="Toast"

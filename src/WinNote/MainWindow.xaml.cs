@@ -58,6 +58,7 @@ public sealed partial class MainWindow : Window
         Root.ActualThemeChanged += (_, _) => ApplyDwmTheme();
         ApplyDwmTheme();
 
+        Editor.AttachCaretLayer(CaretLayer);
         ApplyAppearance();
         InitializeNotes();
     }
@@ -181,6 +182,7 @@ public sealed partial class MainWindow : Window
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)
     {
+        Editor.WindowActive = args.WindowActivationState != WindowActivationState.Deactivated;
         if (args.WindowActivationState != WindowActivationState.Deactivated)
         {
             DispatcherQueue.TryEnqueue(RestoreEditorCaret);

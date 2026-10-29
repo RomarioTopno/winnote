@@ -41,6 +41,15 @@ public sealed partial class ActiveMicaBackdrop : SystemBackdrop
         _controller = null;
     }
 
+    /// <summary>
+    /// We drive the controller with our own configuration, so ignore the default one. The base
+    /// implementation applies it to the target and throws ArgumentException ("The parameter is
+    /// incorrect") on some configuration changes, which crashed the app (error.log, 2026-10-04/28).
+    /// </summary>
+    protected override void OnDefaultSystemBackdropConfigurationChanged(ICompositionSupportsSystemBackdrop target, XamlRoot xamlRoot)
+    {
+    }
+
     private void OnThemeChanged(FrameworkElement sender, object? args)
     {
         if (_config is null) return;
