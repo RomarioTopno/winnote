@@ -24,14 +24,13 @@ public sealed partial class NoteEditor
     private bool _hasFocus;
     private bool _windowActive = true;
     private bool _caretQueued;
-    private ScrollViewer? _scroller;
+    private DispatcherQueueTimer? _settleTimer;
 
     /// <summary>Hosts the caret on <paramref name="layer"/>, a Canvas laid over the editor.</summary>
     internal void AttachCaretLayer(Canvas layer)
     {
         _caretLayer = layer;
         layer.Children.Add(_caret);
-        Document.CaretType = CaretType.Null;
 
         uint blinkMs = Interop.NativeMethods.GetCaretBlinkTime();
         _blinkTimer = DispatcherQueue.CreateTimer();
@@ -46,6 +45,19 @@ public sealed partial class NoteEditor
         SizeChanged += (_, _) => QueueCaretUpdate();
         RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => QueueCaretUpdate());
         ActualThemeChanged += (_, _) => QueueCaretUpdate();
+        // Wheel scrolling moves the text but not the selection; re-check once smooth scrolling settles.
+        _settleTimer = DispatcherQueue.CreateTimer();
+        _settleTimer.Interval = TimeSpan.FromMilliseconds(250);
+        _settleTimer.IsRepeating = false;
+        _settleTimer.Tick += (_, _) => QueueCaretUpdate();
+        AddHandler(PointerWheelChangedEvent, new Microsoft.UI.Xaml.Input.PointerEventHandler((_, _) =>
+        {
+            QueueCaretUpdate();
+            _settleTimer.Stop();
+            _settleTimer.Start();
+        }), handledEventsToo: true);
+
+        Document.CaretType = CaretType.Null; // last: if anything above failed, the stock caret stays
     }
 
     /// <summary>The window's activation state: an inactive window shows no caret.</summary>
@@ -58,16 +70,6 @@ public sealed partial class NoteEditor
             QueueCaretUpdate();
         }
     }
-
-    protected override void OnApplyTemplate()
-    {
-        base.OnApplyTemplate();
-        if (_scroller is not null) _scroller.ViewChanged -= OnScrollerViewChanged;
-        _scroller = GetTemplateChild("ContentElement") as ScrollViewer;
-        if (_scroller is not null) _scroller.ViewChanged += OnScrollerViewChanged;
-    }
-
-    private void OnScrollerViewChanged(object? sender, ScrollViewerViewChangedEventArgs e) => QueueCaretUpdate();
 
     /// <summary>Repositions after layout has caught up with the change (formatting, wrapping, scrolling).</summary>
     private void QueueCaretUpdate()
@@ -113,23 +115,36 @@ public sealed partial class NoteEditor
             _blinkTimer!.Stop();
             return;
         }
-        _caret.Visibility = _caret.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        if (_caret.Visibility == Visibility.Visible)
+        {
+            _caret.Visibility = Visibility.Collapsed;
+        }
+        else if (TryGetCaretBounds(out Rect caret)) // also follows scrolling by the scrollbar
+        {
+            Canvas.SetLeft(_caret, caret.X);
+            Canvas.SetTop(_caret, caret.Y);
+            _caret.Height = caret.Height;
+            _caret.Visibility = Visibility.Visible;
+        }
     }
 
     /// <summary>Caret rectangle in the caret layer's coordinates; false if it is scrolled out of view.</summary>
     private bool TryGetCaretBounds(out Rect bounds)
     {
         bounds = default;
-        if (_caretLayer is null || _scroller is null) return false;
+        if (_caretLayer is null) return false;
         Document.Selection.GetRect(PointOptions.ClientCoordinates, out Rect r, out _);
         if (r.Height <= 0) return false;
 
-        // ClientCoordinates (DIPs) are relative to the text area, which sits inside the scroller's padding.
-        var origin = _scroller.TransformToVisual(_caretLayer).TransformPoint(new Point(_scroller.Padding.Left, _scroller.Padding.Top));
-        bounds = new Rect(origin.X + r.X - CaretWidthDip / 2, origin.Y + r.Y, CaretWidthDip, r.Height);
+        // ClientCoordinates (DIPs) are relative to the text area, inside the border and padding.
+        // (Taken from the control itself: under Native AOT the template's ScrollViewer can't be cast.)
+        var editor = TransformToVisual(_caretLayer).TransformPoint(new Point(0, 0));
+        double x = editor.X + BorderThickness.Left + Padding.Left + r.X;
+        double y = editor.Y + BorderThickness.Top + Padding.Top + r.Y;
+        bounds = new Rect(x - CaretWidthDip / 2, y, CaretWidthDip, r.Height);
 
         // Hide rather than draw over the title bar or footer when the caret is scrolled out.
-        double top = origin.Y - _scroller.Padding.Top, bottom = top + _scroller.ViewportHeight;
+        double top = editor.Y, bottom = editor.Y + ActualHeight;
         return bounds.Y >= top - 1 && bounds.Y + bounds.Height <= bottom + 1;
     }
 }
