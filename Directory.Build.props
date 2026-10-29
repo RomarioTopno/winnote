@@ -1,6 +1,6 @@
 <Project>
   <!-- Single place for the version: used by the app (WinNote.csproj) and the installer (.wixproj). -->
   <PropertyGroup>
-    <WinNoteVersion>1.4.0</WinNoteVersion>
+    <WinNoteVersion>1.4.1</WinNoteVersion>
   </PropertyGroup>
 </Project>
