@@ -98,13 +98,52 @@ public sealed partial class MainWindow : Window
         bool wasHidden = !AppWindow.IsVisible;
         if (wasHidden) PurgeOldNotes();
         Activate();
-        SetForegroundWindow(_hwnd);
+        BringToForeground();
         FocusEditor();
         if (wasHidden)
         {
             PlayShowAnimation();
             TraceShow(start);
         }
+    }
+
+    /// <summary>
+    /// Windows refuses SetForegroundWindow while another app holds the foreground lock (e.g. the
+    /// user is typing there). The window then shows up inactive and the editor gets no caret.
+    /// Attaching to the foreground thread's input state for the call lets it through.
+    /// </summary>
+    private void BringToForeground()
+    {
+        if (SetForegroundWindow(_hwnd) && IsForeground) return;
+        nint foreground = GetForegroundWindow();
+        uint foregroundThread = foreground == 0 ? 0 : GetWindowThreadProcessId(foreground, out _);
+        uint self = GetCurrentThreadId();
+        if (foregroundThread == 0 || foregroundThread == self) return;
+        AttachThreadInput(self, foregroundThread, true);
+        try
+        {
+            BringWindowToTop(_hwnd);
+            SetForegroundWindow(_hwnd);
+        }
+        finally
+        {
+            AttachThreadInput(self, foregroundThread, false);
+        }
+    }
+
+    /// <summary>
+    /// RichEditBox only draws its caret when it receives focus in an active window. Focus given
+    /// while the window was inactive, or kept across a deactivation, leaves it without one, and
+    /// clicking the already-focused editor doesn't help. Re-focusing after activation does.
+    /// </summary>
+    private void RestoreEditorCaret()
+    {
+        if (_searchOpen || _settingsOpen || _exiting || Editor.Visibility != Visibility.Visible) return;
+        if (Content?.XamlRoot is not { } root) return;
+        var focused = FocusManager.GetFocusedElement(root);
+        if (focused is not null && !ReferenceEquals(focused, Editor)) return; // e.g. a button that was clicked
+        PinButton.Focus(FocusState.Programmatic);
+        FocusEditor();
     }
 
     public void HideWindow()
@@ -142,7 +181,11 @@ public sealed partial class MainWindow : Window
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)
     {
-        if (args.WindowActivationState != WindowActivationState.Deactivated) return;
+        if (args.WindowActivationState != WindowActivationState.Deactivated)
+        {
+            DispatcherQueue.TryEnqueue(RestoreEditorCaret);
+            return;
+        }
         if (IsPinned || !AppWindow.IsVisible || _exiting) return;
 
         // Decide after the activation change has settled, so we can see who took the focus.
