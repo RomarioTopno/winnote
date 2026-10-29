@@ -103,6 +103,10 @@ internal static unsafe partial class NativeMethods
     [LibraryImport("kernel32.dll")]
     public static partial uint GetCurrentThreadId();
 
+    /// <summary>Caret blink interval in ms; uint.MaxValue (INFINITE) if blinking is turned off.</summary>
+    [LibraryImport("user32.dll")]
+    public static partial uint GetCaretBlinkTime();
+
     public const uint GA_ROOTOWNER = 3;
 
     [LibraryImport("user32.dll")]
